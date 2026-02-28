@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Portal</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: #e94560;
+      top: -150px;
+      left: -150px;
+      animation: orb1 8s ease-in-out infinite;
+    }
+
+    body::after {
+      width: 400px;
+      height: 400px;
+      background: #4f8ef7;
+      bottom: -100px;
+      right: -100px;
+      animation: orb2 10s ease-in-out infinite;
+    }
+
+    @keyframes orb1 {
+
+      0%,
+      100% {
+        transform: translate(0, 0)
+      }
+
+      50% {
+        transform: translate(60px, 40px)
+      }
+    }
+
+    @keyframes orb2 {
+
+      0%,
+      100% {
+        transform: translate(0, 0)
+      }
+
+      50% {
+        transform: translate(-40px, -60px)
+      }
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 460px;
+      padding: 20px;
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 40px 36px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #e94560, #7f37c9);
+      border-radius: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 10px 35px rgba(233, 69, 96, .45);
+      margin-bottom: 14px;
+    }
+
+    .logo-wrap h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .logo-wrap p {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .form-label {
+      display: block;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 15px 18px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: all .25s;
+      margin-bottom: 18px;
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .form-input:focus {
+      border-color: #e94560;
+      background: rgba(233, 69, 96, 0.07);
+      box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.12);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #e94560, #c0313f);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .5px;
+      transition: all .25s;
+      box-shadow: 0 6px 22px rgba(233, 69, 96, .35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(233, 69, 96, .5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .err-box {
+      background: rgba(233, 69, 96, 0.12);
+      border: 1px solid rgba(233, 69, 96, 0.35);
+      color: #e94560;
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .err-box.show {
+      display: block;
+    }
+
+    .no-data-banner {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #ffc107;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 18px;
+      display: none;
+    }
+
+    .no-data-banner.show {
+      display: block;
+    }
+
+    /* Profile */
+    .profile-header {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+
+    .avatar {
+      width: 84px;
+      height: 84px;
+      background: linear-gradient(135deg, #e94560, #7f37c9);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(233, 69, 96, .4);
+      letter-spacing: 1px;
+    }
+
+    .profile-header h2 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .profile-header p {
+      color: rgba(255, 255, 255, .45);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .welcome-badge {
+      display: inline-block;
+      background: rgba(72, 199, 142, 0.15);
+      border: 1px solid rgba(72, 199, 142, 0.35);
+      color: #48c78e;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .details-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .d-icon {
+      font-size: 20px;
+      min-width: 26px;
+      margin-top: 1px;
+    }
+
+    .d-label {
+      color: rgba(255, 255, 255, .4);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 3px;
+    }
+
+    .d-value {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .btn-logout {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, .45);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+
+    .btn-logout:hover {
+      background: rgba(233, 69, 96, 0.1);
+      border-color: rgba(233, 69, 96, .3);
+      color: #e94560;
+    }
+
+    /* Admin */
+    .admin-card {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .admin-badge {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 22px;
+    }
+
+    .admin-header h2 {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .admin-header p {
+      color: rgba(255, 255, 255, .4);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .upload-zone {
+      border: 2px dashed rgba(247, 151, 30, 0.45);
+      border-radius: 18px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .3s;
+      background: rgba(247, 151, 30, 0.04);
+      margin-bottom: 16px;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.over {
+      border-color: #f7971e;
+      background: rgba(247, 151, 30, 0.1);
+    }
+
+    .upload-zone .uz-icon {
+      font-size: 44px;
+      margin-bottom: 10px;
+    }
+
+    .upload-zone p {
+      color: rgba(255, 255, 255, .5);
+      font-size: 14px;
+    }
+
+    .upload-zone span {
+      color: #f7971e;
+      font-weight: 700;
+    }
+
+    #adminFileInput {
+      display: none;
+    }
+
+    .status-loaded {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: rgba(72, 199, 142, 0.1);
+      border: 1px solid rgba(72, 199, 142, 0.3);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+
+    .status-loaded.show {
+      display: flex;
+    }
+
+    .sl-name {
+      color: #48c78e;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .sl-count {
+      color: rgba(255, 255, 255, .4);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .btn-admin-load {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #f7971e, #e8851a);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .25s;
+      box-shadow: 0 6px 22px rgba(247, 151, 30, .3);
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .btn-admin-load:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(247, 151, 30, .45);
+    }
+
+    .btn-admin-exit {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      color: rgba(255, 255, 255, .35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .25s;
+    }
+
+    .btn-admin-exit:hover {
+      color: rgba(255, 255, 255, .7);
+      border-color: rgba(255, 255, 255, .25);
+    }
+
+    .admin-hint {
+      text-align: center;
+      margin-top: 22px;
+      color: rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      cursor: default;
+      user-select: none;
+      letter-spacing: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div class="page active" id="loginPage">
+    <div class="card">
+      <div class="logo-wrap">
+        <div class="logo-icon">🎓</div>
+        <h1>Student Portal</h1>
+        <p>Enter your name to access your details</p>
+      </div>
+      <div class="no-data-banner" id="noDataBanner">⚠️ Student data not loaded yet. Please contact your administrator.
+      </div>
+      <label class="form-label" for="nameInput">Full Name</label>
+      <input class="form-input" type="text" id="nameInput" placeholder="Type your full name…" autocomplete="off" />
+      <label class="form-label" for="emailInput">Registered Email</label>
+      <input class="form-input" type="email" id="emailInput" placeholder="Type your registered email…"
+        autocomplete="off" />
+      <div class="err-box" id="loginErr">❌ Details not found. Please check your data.</div>
+      <button class="btn-primary" onclick="doLogin()">Secure Login &rarr;</button>
+      <div class="admin-hint" id="adminHint" title="">&#9679; &#9679; &#9679;</div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="profilePage">
+    <div class="card">
+      <div class="profile-header">
+        <div class="avatar" id="avatarInitials">--</div>
+        <h2 id="profileName">Student Name</h2>
+        <p id="profileSub">Student</p>
+        <div class="welcome-badge">&#10003; Logged In Successfully</div>
+      </div>
+      <div class="details-grid" id="detailsGrid"></div>
+      <button class="btn-logout" onclick="doLogout()">&#8592; Logout</button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="page" id="adminPage">
+    <div class="card admin-card">
+      <div class="admin-header">
+        <div class="admin-badge">&#128295;</div>
+        <div>
+          <h2>Admin Panel</h2>
+          <p>Students cannot access this area</p>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('adminFileInput').click()">
+        <div class="uz-icon">&#128202;</div>
+        <p><span>Click to upload</span> or drag &amp; drop Excel file</p>
+        <p style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.3)">Supports .xlsx &amp; .xls &mdash; e.g.
+          "Contact Information new"</p>
+      </div>
+      <input type="file" id="adminFileInput" accept=".xlsx,.xls" />
+
+      <div class="status-loaded" id="statusLoaded">
+        <div style="font-size:26px">&#10003;</div>
+        <div>
+          <div class="sl-name" id="loadedFileName">&mdash;</div>
+          <div class="sl-count" id="loadedCount">0 students</div>
+        </div>
+      </div>
+
+      <div class="err-box" id="adminErr" style="margin-bottom:14px;"></div>
+
+      <button class="btn-admin-load" id="activateBtn" onclick="activateData()">&#10003; Activate &amp; Go to Student
+        Login</button>
+      <button class="btn-admin-exit" onclick="exitAdmin()">&#8592; Back to Student Login</button>
+    </div>
+  </div>
+
+  <script>
+    let students = [];
+    let nameKey = '';
+
+    const ICON_MAP = { name: '👤', email: '📧', phone: '📞', mobile: '📞', roll: '🎫', id: '🎫', college: '🏫', university: '🏫', department: '🏛️', dept: '🏛️', branch: '🌿', year: '📅', semester: '📚', sem: '📚', address: '🏠', city: '🏙️', state: '🗺️', dob: '🎂', birth: '🎂', gender: '🧑', course: '📖', program: '📖', cgpa: '⭐', gpa: '⭐', percentage: '📊', marks: '📊' };
+    function iconFor(k) { const l = k.toLowerCase(); for (const t in ICON_MAP) { if (l.includes(t)) return ICON_MAP[t]; } return '📋'; }
+
+    function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+    // Restore saved data on load
+    window.addEventListener('DOMContentLoaded', async () => {
+      // We don't need to load from local storage anymore, we'll hit the API
+      updateBanner();
+    });
+
+    function updateBanner() {
+      // This is now less critical since the server handles the data
+      const b = document.getElementById('noDataBanner');
+      b.classList.remove('show'); // Hide by default, show on error if needed
+    }
+
+    // LOGIN
+    async function doLogin() {
+      const nameInput = document.getElementById('nameInput').value.trim();
+      const emailInput = document.getElementById('emailInput').value.trim();
+      const err = document.getElementById('loginErr');
+      const loginBtn = document.querySelector('#loginPage .btn-primary');
+
+      err.classList.remove('show');
+      if (!nameInput || !emailInput) {
+        err.textContent = '⚠️ Please enter both your Name and Email.';
+        err.classList.add('show');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Authenticating...';
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nameInput, email: emailInput })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          nameKey = result.nameKey;
+          renderProfile(result.student);
+          showPage('profilePage');
+        } else {
+          err.textContent = result.error || '❌ Incorrect Name or Email. Please try again.';
+          err.classList.add('show');
+        }
+      } catch (e) {
+        err.textContent = '❌ Connection error. Please make sure the server is running.';
+        err.classList.add('show');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Secure Login \u2192';
+      }
+    }
+
+    document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('emailInput').focus(); });
+    document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    function renderProfile(s) {
+      const name = String(s[nameKey] || '').trim();
+      const initials = name.split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('avatarInitials').textContent = initials || '?';
+      document.getElementById('profileName').textContent = name;
+      const keys = Object.keys(s);
+      const eKey = keys.find(k => k.toLowerCase().includes('email'));
+      const dKey = keys.find(k => /dept|branch|department|course/i.test(k));
+      document.getElementById('profileSub').textContent = (dKey && s[dKey]) ? s[dKey] : (eKey && s[eKey]) ? s[eKey] : 'Student';
+      const grid = document.getElementById('detailsGrid');
+      grid.innerHTML = '';
+      for (const key of keys) {
+        const val = String(s[key] ?? '').trim();
+        if (!val) continue;
+        const row = document.createElement('div');
+        row.className = 'detail-row';
+        row.innerHTML = `<div class="d-icon">${iconFor(key)}</div><div><div class="d-label">${key}</div><div class="d-value">${val}</div></div>`;
+        grid.appendChild(row);
+      }
+    }
+
+    function doLogout() { document.getElementById('nameInput').value = ''; document.getElementById('loginErr').classList.remove('show'); showPage('loginPage'); }
+
+    // SECRET ADMIN — triple-click the dots
+    let cc = 0, ct;
+    document.getElementById('adminHint').addEventListener('click', () => {
+      cc++; clearTimeout(ct); ct = setTimeout(() => cc = 0, 800);
+      if (cc >= 3) { cc = 0; openAdmin(); }
+    });
+
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.shiftKey && document.getElementById('nameInput').value.trim().toLowerCase() === 'admin') {
+        e.preventDefault(); document.getElementById('nameInput').value = ''; openAdmin();
+      }
+    });
+
+    function openAdmin() {
+      document.getElementById('adminErr').classList.remove('show');
+      showPage('adminPage');
+    }
+
+    function exitAdmin() { showPage('loginPage'); }
+
+    // The Admin panel now primarily triggers a server reload
+    async function activateData() {
+      const btn = document.getElementById('activateBtn');
+      btn.disabled = true;
+      btn.textContent = 'Reloading Data...';
+
+      try {
+        const response = await fetch('/api/admin/reload', { method: 'POST' });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          btn.textContent = `\u2192 Reloaded ${result.count} students!`;
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = '\u2192 Reload & Go to Student Login';
+            showPage('loginPage');
+          }, 1500);
+        }
+      } catch (e) {
+        document.getElementById('adminErr').textContent = '❌ Failed to reload server data.';
+        document.getElementById('adminErr').classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Activate & Go to Student Login';
+      }
+    }
+
+    // Hide the manual upload for students as it's now server-side
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('activateBtn').style.display = 'block';
+    document.getElementById('activateBtn').textContent = 'Reload Excel Data from Server';
+  </script>
+
+</body>
+
+</html>
