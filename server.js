@@ -13,6 +13,9 @@ app.use(express.static(path.join(__dirname)));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')
+        ? { rejectUnauthorized: false }
+        : false
 });
 
 let nameKey = '';
