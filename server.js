@@ -11,11 +11,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Serve the student portal on the root route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'student-portal.html'));
-});
-
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
@@ -46,6 +41,11 @@ async function findKeys() {
 
 findKeys();
 
+// Serve the student portal on the root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // API to login and get specific student data
 app.post('/api/login', async (req, res) => {
     const { name, email } = req.body;
@@ -65,23 +65,10 @@ app.post('/api/login', async (req, res) => {
         const targetName = normalize(name);
         const targetEmail = normalize(email);
 
-        console.log(`\n--- LOGIN ATTEMPT ---`);
-        console.log(`Target Name: '${targetName}', Target Email: '${targetEmail}'`);
-        console.log(`Database rows count: ${result.rows.length}`);
-        console.log(`Active Name Key: '${nameKey}', Active Email Key: '${emailKey}'`);
-
         const matchedStudent = result.rows.find(student => {
             const dbName = normalize(student[nameKey]);
             const dbEmail = normalize(student[emailKey]);
-            const match = dbName === targetName && dbEmail === targetEmail;
-
-            if (dbName.includes('deshmukh') || targetName.includes('deshmukh')) {
-                console.log(`\n  Checking Row -> Raw Name: '${student[nameKey]}', Raw Email: '${student[emailKey]}'`);
-                console.log(`  Normalized -> Name: '${dbName}', Email: '${dbEmail}'`);
-                console.log(`  Match Result: ${match}`);
-            }
-
-            return match;
+            return dbName === targetName && dbEmail === targetEmail;
         });
 
         if (matchedStudent) {
